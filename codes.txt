@@ -1,0 +1,54 @@
+apt install stunnel4 -y
+
+/etc/init.d/stunnel4 restart
+
+nano /etc/stunnel/stunnel.conf
+
+
+cert = /etc/stunnel/stunnel.pem
+client = no
+socket = a:SO_REUSEADDR=1
+socket = l:TCP_NODELAY=1
+socket = r:TCP_NODELAY=1
+
+[dropbear]
+connect = 127.0.0.1:3128
+accept = 80
+
+[port 443]
+connect = 127.0.0.1:3128
+accept = 443
+
+
+iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+
+
+apt install dropbear
+
+/etc/init.d/dropbear restart
+
+nano /etc/default/dropbear
+
+NO_START=1 change NO_START=0
+
+Port 3128
+
+DROPBEAR_EXTRA_ARGS="-p 109 -p 110"
+
+/etc/init.d/dropbear restart
+
+openssl genrsa -out key.pem 2048
+
+openssl req -new -x509 -key key.pem -out cert.pem -days 1095
+
+cat key.pem cert.pem >> /etc/stunnel/stunnel.pem
+
+/etc/init.d/stunnel4 restart
+
+
+Create dropbear account
+
+useradd username 
+passwd username
+
+/etc/init.d/dropbear restart
